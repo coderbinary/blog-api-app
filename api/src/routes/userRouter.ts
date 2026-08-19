@@ -8,3 +8,4 @@ export const userRouter = Router();
 
 userRouter.post("/register",optionalAuth,registerValidation,validate,userController.register);
 userRouter.post("/login",optionalAuth,loginValidation,validate,userController.login);
+userRouter.get("/auth/me",optionalAuth,userController.getUser);
