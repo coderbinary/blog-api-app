@@ -3,6 +3,13 @@ import { AppError } from "../errors/AppError.js";
 import { prisma } from "../lib/prisma.js";
 import { generateUserToken } from "../lib/token.js";
 import type { UserLoginData, UserRegistrationData } from "../types/userTypes.js"
+import type { Prisma } from "../generated/prisma/client.js";
+
+interface GetUsersInput {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
 
 const register = async (data: UserRegistrationData) => {
   try {
@@ -55,6 +62,84 @@ const login = async (data: UserLoginData) => {
   }
 }
 
+const getUsersService = async (input: GetUsersInput) => {
+  const page = input.page ?? 1;
+  const limit = input.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  // Build filter condition for search
+  const where: Prisma.UserWhereInput = input.search
+    ? {
+        OR: [
+          { username: { contains: input.search, mode: "insensitive" } },
+          { email: { contains: input.search, mode: "insensitive" } },
+        ],
+      }
+    : {};
+
+  // Execute database query and total count in parallel
+  const [users, totalUsers] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            posts: true,
+            comments: true,
+          },
+        },
+      },
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(totalUsers / limit);
+
+  return {
+    users,
+    pagination: {
+      totalUsers,
+      currentPage: page,
+      totalPages,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
+};
+
+const deleteUserService = async (userId: number, currentAdminId: number) => {
+  // 1. Prevent admin from deleting their own account via this endpoint
+  if (userId === currentAdminId) {
+    throw new AppError(400, "You cannot delete your own admin account");
+  }
+
+  // 2. Check if the target user exists
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+
+  if (!existingUser) {
+    throw new AppError(404, "User not found");
+  }
+
+  // 3. Delete user (Postgres automatically cascades and deletes their posts & comments)
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+
+  return { success: true };
+};
+
 export default {
-  register,login
+  register,login,getUsersService,deleteUserService
 }

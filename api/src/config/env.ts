@@ -14,5 +14,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   databaseUrl: checkRequiredEnvVariables("DATABASE_URL"),
   userSecret: checkRequiredEnvVariables("USER_SECRET"),
-  adminSecret: checkRequiredEnvVariables("ADMIN_SECRET")
+  adminSecret: checkRequiredEnvVariables("ADMIN_SECRET"),
+  adminUsername: checkRequiredEnvVariables("ADMIN_USERNAME"),
+  adminEmail: checkRequiredEnvVariables("ADMIN_EMAIL")
 } as const;

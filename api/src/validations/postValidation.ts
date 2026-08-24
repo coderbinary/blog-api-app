@@ -1,4 +1,25 @@
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
+
+export const getPostsValidation = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Page must be a positive integer')
+    .toInt(),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+    .toInt(),
+
+  query('sort')
+    .optional()
+    .isIn(['asc', 'desc']).withMessage('Sort must be asc or desc'),
+
+  query('category')
+    .optional()
+    .trim()
+    .isString().withMessage('Category must be a string'),
+];
 
 export const createPostValidation = [
   body('title')
@@ -27,13 +48,15 @@ export const createPostValidation = [
 
   body('categoryId')
     .notEmpty().withMessage('Category is required').bail()
-    .isInt().withMessage('Category ID must be a valid number'),
+    .isInt().withMessage('Category ID must be a valid number')
+    .toInt(),
 ];
 
 export const updatePostValidation = [
   param('postId')
     .notEmpty().withMessage('Post ID is required').bail()
-    .isInt().withMessage('Post ID must be a valid number'),
+    .isInt().withMessage('Post ID must be a valid number')
+    .toInt(),
 
   body('title')
     .optional()
@@ -61,5 +84,13 @@ export const updatePostValidation = [
 
   body('categoryId')
     .optional()
-    .isInt().withMessage('Category ID must be a valid number'),
+    .isInt().withMessage('Category ID must be a valid number')
+    .toInt(),
+];
+
+export const deletePostValidation = [
+  param('postId')
+    .notEmpty().withMessage('Post ID is required').bail()
+    .isInt({ min: 1 }).withMessage('Post ID must be a valid positive integer')
+    .toInt(),
 ];

@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, param, query } from 'express-validator';
 
 const usernameCharPattern = /^[a-zA-Z0-9_-]+$/;
 const containsLetter = /[a-zA-Z]/;
@@ -41,4 +41,27 @@ export const loginValidation = [
 
   body('password')
     .notEmpty().withMessage('Password is required'),
+];
+
+export const getUsersValidation = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 }).withMessage('Page must be a positive integer')
+    .toInt(),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+    .toInt(),
+
+  query('search')
+    .optional()
+    .trim(),
+];
+
+export const deleteUserValidation = [
+  param('userId')
+    .notEmpty().withMessage('User ID is required').bail()
+    .isInt({ min: 1 }).withMessage('User ID must be a valid positive integer')
+    .toInt(),
 ];
