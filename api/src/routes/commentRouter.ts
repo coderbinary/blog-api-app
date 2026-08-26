@@ -12,7 +12,7 @@ export const commentRouter = Router({
   mergeParams: true,
 });
 
-commentRouter.get("/", optionalAuth, commentController.getCommentsOfPost);
+commentRouter.get("/", commentController.getCommentsOfPost);
 commentRouter.post(
   "/",
   optionalAuth,

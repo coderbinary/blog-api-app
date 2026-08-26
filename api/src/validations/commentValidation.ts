@@ -42,8 +42,13 @@ export const deleteCommentValidation = [
 ];
 
 export const forceDeleteCommentValidation = [
-  param('commentId')
-    .notEmpty().withMessage('Comment ID is required').bail()
-    .isInt({ min: 1 }).withMessage('Comment ID must be a valid positive integer')
+  param("postId")
+    .notEmpty().withMessage("Post ID is required").bail()
+    .isInt({ min: 1 }).withMessage("Post ID must be a valid positive integer")
+    .toInt(),
+
+  param("commentId")
+    .notEmpty().withMessage("Comment ID is required").bail()
+    .isInt({ min: 1 }).withMessage("Comment ID must be a valid positive integer")
     .toInt(),
 ];

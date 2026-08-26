@@ -22,19 +22,23 @@ const getCommentsOfPost = async (
     if (!postId || isNaN(id)) {
       throw new AppError(400, "Invalid Post Id");
     }
+
     const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = 10;
     const rawSort = req.query.sort;
     const sort: "asc" | "desc" = rawSort === "asc" ? "asc" : "desc";
 
     const result = await commentService.getCommentsOfPostService(id, {
       page,
-      limit: 10,
+      limit,
       sort,
     });
 
     return res.status(200).json({
       success: true,
+      message: "Comments fetched successfully",
       comments: result.comments,
+      meta: result.meta,
     });
   } catch (err) {
     next(err);

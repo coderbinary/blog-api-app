@@ -55,35 +55,6 @@ const getRecentPosts = async () => {
   }
 }
 
-const getPostByIdService = async (id: number) => {
-  try {
-    const post = await prisma.post.findUnique({
-      where: {
-        published: true,
-        id
-      },
-      select: {
-        author: {
-          select: {
-            username: true
-          }
-        },
-        title: true,
-        content: true,
-        createdAt: true,
-        updatedAt: true,
-        category: {
-          select: {
-            name: true
-          }
-        }
-      }
-    });
-    return {post};
-  } catch(err) {
-    throw err;
-  }
-}
 
 const getPostsService = async ({
   page,
@@ -154,7 +125,6 @@ const getPostsService = async ({
 const createPostService = async (input: CreatePostInput) => {
   const { title, description, coverImageUrl, content, published = false, categoryId, authorId } = input;
 
-  // 1. Check if category exists
   const existingCategory = await prisma.category.findUnique({
     where: { id: categoryId },
     select: { id: true },
@@ -164,7 +134,6 @@ const createPostService = async (input: CreatePostInput) => {
     throw new AppError(404, "Selected category does not exist");
   }
 
-  // 2. Generate slug from title
   const slug = title
     .toLowerCase()
     .trim()
@@ -172,7 +141,6 @@ const createPostService = async (input: CreatePostInput) => {
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-  // 3. Create post in database
   const post = await prisma.post.create({
     data: {
       title,
@@ -284,6 +252,35 @@ const deletePostService = async (postId: number) => {
   });
 
   return { success: true };
+};
+
+const getPostByIdService = async (id: number, isAdmin = false) => {
+  const post = await prisma.post.findFirst({
+    where: {
+      id,
+      // If not admin, strictly require published: true
+      ...(isAdmin ? {} : { published: true }),
+    },
+    select: {
+      title: true,
+      content: true,
+      published: true, // Included so admins can see status in preview
+      createdAt: true,
+      updatedAt: true,
+      author: {
+        select: {
+          username: true,
+        },
+      },
+      category: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  return { post };
 };
 
 export default {

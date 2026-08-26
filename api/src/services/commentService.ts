@@ -1,32 +1,46 @@
 import { AppError } from "../errors/AppError.js";
 import { prisma } from "../lib/prisma.js";
 
-export const getCommentsOfPostService = async (
+const getCommentsOfPostService = async (
   postId: number,
   options: { page: number; limit: number; sort: "asc" | "desc" },
 ) => {
   const { page, limit, sort } = options;
   const skip = (page - 1) * limit;
 
-  const comments = await prisma.comment.findMany({
-    where: { postId },
-    orderBy: { createdAt: sort },
-    take: limit,
-    skip: skip,
-    select: {
-      id: true,
-      author: {
-        select: {
-          username: true,
-        },
-      },
-      body: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  const whereCondition = { postId };
 
-  return { comments };
+  // Run both queries simultaneously
+  const [comments, totalComments] = await Promise.all([
+    prisma.comment.findMany({
+      where: whereCondition,
+      orderBy: { createdAt: sort },
+      take: limit,
+      skip: skip,
+      select: {
+        id: true,
+        author: {
+          select: {
+            username: true,
+          },
+        },
+        body: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.comment.count({ where: whereCondition }),
+  ]);
+
+  return {
+    comments,
+    meta: {
+      totalComments,
+      currentPage: page,
+      limit,
+      totalPages: Math.ceil(totalComments / limit),
+    },
+  };
 };
 
 const createCommentOnPostService = async ({
@@ -171,22 +185,31 @@ const deleteCommentOnPostService = async ({
   return { success: true };
 };
 
-const forceDeleteCommentService = async (commentId: number) => {
-
-  const existingComment = await prisma.comment.findUnique({
-    where: { id: commentId },
-    select: { id: true },
+const forceDeleteCommentService = async (
+  postId: number,
+  commentId: number,
+) => {
+  // Verify comment exists and actually belongs to the given post
+  const comment = await prisma.comment.findFirst({
+    where: {
+      id: commentId,
+      postId: postId,
+    },
+    select: {
+      id: true,
+    },
   });
 
-  if (!existingComment) {
-    throw new AppError(404, "Comment not found");
+  if (!comment) {
+    throw new AppError(404, "Comment not found on this post");
   }
 
+  // Admin bypasses author checks and deletes directly
   await prisma.comment.delete({
-    where: { id: commentId },
+    where: {
+      id: commentId,
+    },
   });
-
-  return { success: true };
 };
 
 export default {

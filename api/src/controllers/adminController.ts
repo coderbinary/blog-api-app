@@ -49,6 +49,7 @@ interface DeleteCategoryData {
 
 interface ForceDeleteCommentData {
   commentId: number;
+  postId: number;
 }
 
 interface GetUsersQuery {
@@ -236,17 +237,19 @@ const deleteCategory = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-const forceDeleteComment = async (req: Request, res: Response, next: NextFunction) => {
+const forceDeleteComment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const { commentId } = matchedData<ForceDeleteCommentData>(req, {
-      locations: ["params"],
-    });
+    const { postId, commentId } = matchedData<ForceDeleteCommentData>(req);
 
-    await commentService.forceDeleteCommentService(commentId);
+    await commentService.forceDeleteCommentService(postId, commentId);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Comment deleted successfully by admin",
+      message: "Comment force deleted successfully by admin",
     });
   } catch (err) {
     next(err);
@@ -291,6 +294,23 @@ const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const getAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = res.locals.user;
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin authenticated successfully",
+      user: {
+        id: user.id,
+        username: user.username,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export default {
   login,
   getAllPosts,
@@ -302,5 +322,6 @@ export default {
   deleteCategory,
   forceDeleteComment,
   getUsers,
-  deleteUser
+  deleteUser,
+  getAdmin
 };

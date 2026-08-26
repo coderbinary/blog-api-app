@@ -13,7 +13,7 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
   try {
     const decoded = jwt.verify(token, env.adminSecret) as { id: number; username: string };
 
-    if (decoded.username !== env.adminSecret) {
+    if (decoded.username !== env.adminUsername) {
       throw new AppError(403, "Forbidden: Admin access required");
     }
 
