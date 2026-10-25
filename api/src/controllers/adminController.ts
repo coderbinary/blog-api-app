@@ -62,52 +62,57 @@ interface DeleteUserData {
   userId: number;
 }
 
+
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = res.locals?.user;
-    if (user) {
-      throw new AppError(401, "Already Logged In");
-    }
     const data = matchedData<UserLoginData>(req);
+
     if (data.username !== env.adminUsername) {
-      throw new AppError(403, "Access Denied: Not an admin account");
+      throw new AppError(401, "Invalid credentials");
     }
-    let admin = await prisma.user.findUnique({
-      where: {
-        username: env.adminUsername,
-      },
+
+    const isMatch = await bcrypt.compare(
+      data.password,
+      env.adminPasswordHash,
+    );
+
+    if (!isMatch) {
+      throw new AppError(401, "Invalid credentials");
+    }
+
+    // The admin must already exist in the database
+    // because posts require a valid authorId.
+    const admin = await prisma.user.findUnique({
+      where: { username: env.adminUsername },
+      select: { id: true, username: true },
     });
+
     if (!admin) {
-      const hashedPassword = await bcrypt.hash(data.password, 10);
-      admin = await prisma.user.create({
-        data: {
-          username: env.adminUsername,
-          email: env.adminEmail,
-          password: hashedPassword,
-        },
-      });
-    } else {
-      const isMatch = await bcrypt.compare(data.password, admin.password);
-      if (!isMatch) {
-        throw new AppError(401, "Invalid credentials");
-      }
+      throw new AppError(500, "Admin account is not provisioned");
     }
+
     const token = generateAdminToken(admin.id, admin.username);
+
     res.cookie("admin_token", token, {
       httpOnly: true,
       secure: env.isProduction,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.status(200).json({
+
+    return res.status(200).json({
       success: true,
       message: "Admin Logged In Successfully",
-      user: { id: admin.id, username: admin.username },
+      user: {
+        id: admin.id,
+        username: admin.username,
+      },
     });
   } catch (err) {
     next(err);
   }
 };
+
 
 const getAllPosts = async (req: Request, res: Response, next: NextFunction) => {
   try {

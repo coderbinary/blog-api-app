@@ -1,8 +1,8 @@
-import 'dotenv/config';
+import "dotenv/config";
 
 function checkRequiredEnvVariables(key: string): string {
   const value = process.env[key];
-  if(!value){
+  if (!value) {
     throw new Error(`Missing env variables for ${key}`);
   }
   return value;
@@ -10,11 +10,12 @@ function checkRequiredEnvVariables(key: string): string {
 
 export const env = {
   port: Number(process.env.PORT ?? 3000),
-  isProduction: (process.env.NODE_ENV ?? 'development') === 'production',
-  nodeEnv: process.env.NODE_ENV ?? 'development',
+  isProduction: (process.env.NODE_ENV ?? "development") === "production",
+  nodeEnv: process.env.NODE_ENV ?? "development",
   databaseUrl: checkRequiredEnvVariables("DATABASE_URL"),
   userSecret: checkRequiredEnvVariables("USER_SECRET"),
   adminSecret: checkRequiredEnvVariables("ADMIN_SECRET"),
   adminUsername: checkRequiredEnvVariables("ADMIN_USERNAME"),
-  adminEmail: checkRequiredEnvVariables("ADMIN_EMAIL")
+  adminEmail: checkRequiredEnvVariables("ADMIN_EMAIL"),
+  adminPasswordHash: checkRequiredEnvVariables("ADMIN_PASSWORD_HASH"),
 } as const;
