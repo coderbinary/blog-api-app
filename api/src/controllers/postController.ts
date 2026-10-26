@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import postService from "../services/postService.js";
 import { AppError } from "../errors/AppError.js";
 import { matchedData } from "express-validator";
-import { env } from "node:process";
+import { env } from "../config/env.js";
 
 const getPosts = async (
   req: Request,
