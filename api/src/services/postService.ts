@@ -146,7 +146,7 @@ const createPostService = async (input: CreatePostInput) => {
       title,
       slug,
       description: description ?? null,
-      coverImageUrl: description ?? null,
+      coverImageUrl: coverImageUrl ?? null,
       content,
       published,
       categoryId,
