@@ -1,6 +1,6 @@
 import { AppError } from "../errors/AppError.js";
 import type { Prisma } from "../generated/prisma/client.js";
-import { prisma } from "../lib/prisma.js"
+import { prisma } from "../lib/prisma.js";
 
 interface CreatePostInput {
   title: string;
@@ -29,7 +29,7 @@ const getRecentPosts = async () => {
         published: true,
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
       take: 3,
       select: {
@@ -39,22 +39,21 @@ const getRecentPosts = async () => {
         title: true,
         category: {
           select: {
-            name: true
-          }
+            name: true,
+          },
         },
         author: {
           select: {
-            username: true
-          }
-        }
-      }
-    })
-    return {posts};
-  } catch(err) {
-    throw err
+            username: true,
+          },
+        },
+      },
+    });
+    return { posts };
+  } catch (err) {
+    throw err;
   }
-}
-
+};
 
 const getPostsService = async ({
   page,
@@ -123,7 +122,15 @@ const getPostsService = async ({
 };
 
 const createPostService = async (input: CreatePostInput) => {
-  const { title, description, coverImageUrl, content, published = false, categoryId, authorId } = input;
+  const {
+    title,
+    description,
+    coverImageUrl,
+    content,
+    published = false,
+    categoryId,
+    authorId,
+  } = input;
 
   const existingCategory = await prisma.category.findUnique({
     where: { id: categoryId },
@@ -170,7 +177,15 @@ const createPostService = async (input: CreatePostInput) => {
 };
 
 const updatePostService = async (input: UpdatePostInput) => {
-  const { postId, title, description, coverImageUrl, content, published, categoryId } = input;
+  const {
+    postId,
+    title,
+    description,
+    coverImageUrl,
+    content,
+    published,
+    categoryId,
+  } = input;
 
   const existingPost = await prisma.post.findUnique({
     where: { id: postId },
@@ -237,7 +252,6 @@ const updatePostService = async (input: UpdatePostInput) => {
 };
 
 const deletePostService = async (postId: number) => {
-
   const existingPost = await prisma.post.findUnique({
     where: { id: postId },
     select: { id: true },
@@ -267,6 +281,10 @@ const getPostByIdService = async (id: number, isAdmin = false) => {
       published: true, // Included so admins can see status in preview
       createdAt: true,
       updatedAt: true,
+      id: true,
+      slug: true,
+      description: true,
+      coverImageUrl: true,
       author: {
         select: {
           username: true,
@@ -290,4 +308,4 @@ export default {
   createPostService,
   updatePostService,
   deletePostService,
-}
+};
