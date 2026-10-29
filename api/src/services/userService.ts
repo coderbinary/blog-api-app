@@ -140,6 +140,18 @@ const deleteUserService = async (userId: number, currentAdminId: number) => {
   return { success: true };
 };
 
+const isUsernameTaken = async(username: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      username
+    },
+    select: {
+      id: true
+    }
+  })
+  return !!user;
+}
+
 export default {
-  register,login,getUsersService,deleteUserService
+  register,login,getUsersService,deleteUserService,isUsernameTaken
 }
