@@ -62,7 +62,6 @@ interface DeleteUserData {
   userId: number;
 }
 
-
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = matchedData<UserLoginData>(req);
@@ -71,10 +70,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       throw new AppError(401, "Invalid credentials");
     }
 
-    const isMatch = await bcrypt.compare(
-      data.password,
-      env.adminPasswordHash,
-    );
+    const isMatch = await bcrypt.compare(data.password, env.adminPasswordHash);
 
     if (!isMatch) {
       throw new AppError(401, "Invalid credentials");
@@ -112,7 +108,6 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     next(err);
   }
 };
-
 
 const getAllPosts = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -191,7 +186,11 @@ const deletePost = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const createCategory = async (req: Request, res: Response, next: NextFunction) => {
+const createCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { name } = matchedData<CreateCategoryData>(req);
 
@@ -207,7 +206,11 @@ const createCategory = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
+const updateCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id, name } = matchedData<UpdateCategoryData>(req, {
       locations: ["params", "body"],
@@ -225,7 +228,11 @@ const updateCategory = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
+const deleteCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id } = matchedData<DeleteCategoryData>(req, {
       locations: ["params"],
@@ -316,6 +323,43 @@ const getAdmin = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const getDashboardStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const [totalPosts, totalComments, totalUsers, totalCategories] =
+      await Promise.all([
+        prisma.post.count(),
+        prisma.comment.count(),
+        prisma.user.count(),
+        prisma.category.count(),
+      ]);
+
+    res.json({
+      totalPosts,
+      totalComments,
+      totalUsers,
+      totalCategories,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const logout = async (req: Request, res: Response, next: NextFunction) => {
+  res.clearCookie("admin_token", {
+    httpOnly: true,
+    secure: env.isProduction,
+    sameSite: "lax",
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Admin logged out successfully"
+  })
+};
+
 export default {
   login,
   getAllPosts,
@@ -328,5 +372,7 @@ export default {
   forceDeleteComment,
   getUsers,
   deleteUser,
-  getAdmin
+  getAdmin,
+  getDashboardStats,
+  logout,
 };

@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { optionalAuth } from "../middlewares/optionalAuth.js";
 import { deleteUserValidation, getUsersValidation, loginValidation } from "../validations/userValidation.js";
 import { validate } from "../middlewares/validate.js";
 import adminController from "../controllers/adminController.js";
@@ -16,7 +15,9 @@ adminRouter.post("/login",loginValidation,validate,adminController.login);
 
 adminRouter.use(requireAdmin);
 
+adminRouter.get("/logout",adminController.logout);
 adminRouter.get("/auth/me", adminController.getAdmin);
+adminRouter.get("/stats", adminController.getDashboardStats);
 
 adminRouter.get("/posts", getPostsValidation,validate,adminController.getAllPosts);
 adminRouter.post("/posts", createPostValidation,validate,adminController.createPost);
